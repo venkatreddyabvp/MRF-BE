@@ -10,8 +10,16 @@ const authMiddleware = (req, res, next) => {
   }
 
   try {
+    // Check if token format is correct (Bearer token)
+    if (!authorization.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Invalid token format" });
+    }
+
+    // Extract the token from the authorization header
+    const token = authorization.split(" ")[1];
+
     // Verify the token
-    const decodedToken = jwt.verify(authorization, process.env.JWT_SECRET);
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
     // Check if token is expired
     if (decodedToken.exp <= Math.floor(Date.now() / 1000)) {
@@ -24,7 +32,14 @@ const authMiddleware = (req, res, next) => {
     // Move to the next middleware
     next();
   } catch (error) {
-    // Pass the error to the error handling middleware
+    // Handle token verification errors
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Token expired" });
+    }
+    // Pass other errors to the error handling middleware
     next(error);
   }
 };

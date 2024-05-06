@@ -7,7 +7,8 @@ const stockController = {
   addStock: async (req, res) => {
     try {
       stockController.verifyToken(req, res, async () => {
-        const { date, tyreSize, quantity, comment, SSP, location } = req.body;
+        const { date, tyreSize, quantity, comment, SSP, location, amount } =
+          req.body;
 
         let stockReport = await StockReport.findOne({
           date,
@@ -31,6 +32,7 @@ const stockController = {
             comment,
             SSP,
             location,
+            amount,
           });
         }
 
@@ -47,7 +49,8 @@ const stockController = {
   sellTyresFromStock: async (req, res) => {
     try {
       stockController.verifyToken(req, res, async () => {
-        const { date, tyreSize, quantity, comment, SSP, location } = req.body;
+        const { date, tyreSize, quantity, comment, SSP, location, amount } =
+          req.body;
 
         let stockReport = await StockReport.findOne({
           date,
@@ -79,6 +82,7 @@ const stockController = {
             quantity,
             SSP,
             location,
+            amount,
           });
           await stockReport.save();
 

@@ -66,58 +66,42 @@ const salesController = {
         return res.status(400).json({ message: "Required fields are missing" });
       }
 
-      // Create a new sales report
-      const salesReport = new SalesReport({
-        date,
-        amount,
-        location,
-        sales: [
-          { tyreSize, comment, quantity, amount, SSP, vehicle, location },
-        ],
-      });
-      await salesReport.save();
+      // Find existing sales report for the given date
+      let salesReport = await SalesReport.findOne({ date });
 
-      // Update the stock report with sales information
-      let stockReport = await StockReport.findOne({
-        date,
-        status: "existing-stock",
-      });
-      if (!stockReport) {
-        stockReport = new StockReport({ date, status: "existing-stock" });
-      }
-
-      // Check if the stock report already has sales for the given date
-      const existingSalesIndex = stockReport.sales.findIndex(
-        (sale) => sale.date.toString() === date.toString(),
-      );
-
-      if (existingSalesIndex !== -1) {
-        // If sales already exist for the given date, update the quantities
-        stockReport.sales[existingSalesIndex].quantity += quantity;
-        stockReport.sales[existingSalesIndex].amount += amount;
+      if (salesReport) {
+        // If sales report exists, update the existing entry
+        const existingSale = salesReport.sales.find(
+          (sale) =>
+            sale.tyreSize === tyreSize &&
+            sale.SSP === SSP &&
+            sale.location === location,
+        );
+        if (existingSale) {
+          existingSale.quantity += quantity;
+          existingSale.amount += amount;
+        } else {
+          salesReport.sales.push({
+            tyreSize,
+            comment,
+            quantity,
+            amount,
+            SSP,
+            vehicle,
+            location,
+          });
+        }
       } else {
-        // If sales do not exist for the given date, add a new entry
-        stockReport.sales.push({
+        // If sales report does not exist, create a new entry
+        salesReport = new SalesReport({
           date,
-          tyreSize,
-          comment,
-          quantity,
-          amount,
-          SSP,
-          vehicle,
-          location,
+          sales: [
+            { tyreSize, comment, quantity, amount, SSP, vehicle, location },
+          ],
         });
       }
 
-      // Validate that the requested quantity is less than or equal to SSP
-      const existingStockItem = stockReport.existingStock.find(
-        (item) => item.tyreSize === tyreSize,
-      );
-      if (existingStockItem && quantity > existingStockItem.SSP) {
-        throw new Error("Requested quantity cannot be greater than SSP");
-      }
-
-      await stockReport.save();
+      await salesReport.save();
 
       res.status(200).json({ message: "Sales report added successfully" });
     } catch (error) {

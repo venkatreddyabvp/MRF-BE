@@ -37,7 +37,6 @@ const stockReportSchema = new Schema({
   date: {
     type: Date,
     required: true,
-    unique: true,
   },
   openStock: [stockItemSchema],
   existingStock: [stockItemSchema],

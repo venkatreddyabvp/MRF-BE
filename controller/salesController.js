@@ -41,6 +41,7 @@ const salesController = {
   },
   // Add a new sales report
   // POST /api/sales
+
   addSalesReport: async (req, res) => {
     try {
       const {
@@ -87,16 +88,29 @@ const salesController = {
       if (!stockReport) {
         stockReport = new StockReport({ date, status: "existing-stock" });
       }
-      stockReport.sales.push({
-        date,
-        tyreSize,
-        comment,
-        quantity,
-        amount,
-        SSP,
-        vehicle,
-        location,
-      });
+
+      // Check if the stock report already has sales for the given date
+      const existingSalesIndex = stockReport.sales.findIndex(
+        (sale) => sale.date.toString() === date.toString(),
+      );
+
+      if (existingSalesIndex !== -1) {
+        // If sales already exist for the given date, update the quantities
+        stockReport.sales[existingSalesIndex].quantity += quantity;
+        stockReport.sales[existingSalesIndex].amount += amount;
+      } else {
+        // If sales do not exist for the given date, add a new entry
+        stockReport.sales.push({
+          date,
+          tyreSize,
+          comment,
+          quantity,
+          amount,
+          SSP,
+          vehicle,
+          location,
+        });
+      }
       await stockReport.save();
 
       res.status(200).json({ message: "Sales report added successfully" });

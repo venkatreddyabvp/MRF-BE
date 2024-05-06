@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../model/userModel.js";
+import argon2 from "argon2";
+
 const userController = {
   signUp: async (req, res) => {
     try {

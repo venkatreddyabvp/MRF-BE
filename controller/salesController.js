@@ -69,6 +69,8 @@ const salesController = {
       // Create a new sales report
       const salesReport = new SalesReport({
         date,
+        amount,
+        location,
         sales: [
           { tyreSize, comment, quantity, amount, SSP, vehicle, location },
         ],

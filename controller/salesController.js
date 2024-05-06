@@ -66,13 +66,9 @@ const salesController = {
         return res.status(400).json({ message: "Required fields are missing" });
       }
 
-      // Get the user ID from the JWT token
-      const userId = req.userId;
-
       // Create a new sales report
       const salesReport = new SalesReport({
         date,
-        user: userId, // Set the user reference
         sales: [
           { tyreSize, comment, quantity, amount, SSP, vehicle, location },
         ],
@@ -112,7 +108,10 @@ const salesController = {
       }
 
       // Validate that the requested quantity is less than or equal to SSP
-      if (quantity > SSP) {
+      const existingStockItem = stockReport.existingStock.find(
+        (item) => item.tyreSize === tyreSize,
+      );
+      if (existingStockItem && quantity > existingStockItem.SSP) {
         throw new Error("Requested quantity cannot be greater than SSP");
       }
 

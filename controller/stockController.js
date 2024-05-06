@@ -19,16 +19,17 @@ const stockController = {
           stockReport = new StockReport({ date, status: "existing-stock" });
         }
 
+        // Find the item with the same tyreSize and SSP
         const existingItemIndex = stockReport.existingStock.findIndex(
-          (item) => item.tyreSize === tyreSize,
+          (item) => item.tyreSize === tyreSize && item.SSP === SSP,
         );
 
         if (existingItemIndex !== -1) {
-          // If item with the same tyreSize exists, update the quantity and amount
+          // If item with the same tyreSize and SSP exists, update the quantity and amount
           stockReport.existingStock[existingItemIndex].quantity += quantity;
           stockReport.existingStock[existingItemIndex].amount += amount;
         } else {
-          // If item with the same tyreSize doesn't exist, add a new entry
+          // If item with the same tyreSize and SSP doesn't exist, add a new entry
           stockReport.existingStock.push({
             tyreSize,
             quantity,

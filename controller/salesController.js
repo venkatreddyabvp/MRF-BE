@@ -41,7 +41,6 @@ const salesController = {
   },
   // Add a new sales report
   // POST /api/sales
-
   addSalesReport: async (req, res) => {
     try {
       const {
@@ -111,6 +110,12 @@ const salesController = {
           location,
         });
       }
+
+      // Validate that the requested quantity is less than or equal to SSP
+      if (quantity > SSP) {
+        throw new Error("Requested quantity cannot be greater than SSP");
+      }
+
       await stockReport.save();
 
       res.status(200).json({ message: "Sales report added successfully" });

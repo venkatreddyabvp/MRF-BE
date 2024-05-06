@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-
+import User from "../model/userModel.js";
 const userController = {
   signUp: async (req, res) => {
     try {

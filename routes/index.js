@@ -33,7 +33,15 @@ router.post("/owner/login", loginOwner);
 router.post("/worker/signup", signupWorker);
 router.post("/worker/login", loginWorker);
 
-router.post("/special-order", createSpecialOrder);
-router.get("/special-orders", getSpecialOrders);
+router.post(
+  "/special-reports",
+  authenticate(["owner", "worker"]),
+  createSpecialOrder,
+);
+router.get(
+  "/special-reports",
+  authenticate(["owner", "worker"]),
+  getSpecialOrders,
+);
 
 export default router;

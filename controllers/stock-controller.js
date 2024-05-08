@@ -69,7 +69,7 @@ export const recordSale = async (req, res) => {
       customerName,
       phoneNumber,
       comment,
-      typeSize,
+      tyreSize,
     } = req.body;
     const { role } = req.user;
 
@@ -96,7 +96,7 @@ export const recordSale = async (req, res) => {
       customerName,
       phoneNumber,
       comment,
-      typeSize,
+      tyreSize,
       user: req.user.id,
     });
 

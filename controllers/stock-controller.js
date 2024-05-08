@@ -65,11 +65,11 @@ export const recordSale = async (req, res) => {
     const {
       date,
       quantity,
-      totalAmount,
       customerName,
       phoneNumber,
       comment,
       tyreSize,
+      pricePerUnit,
     } = req.body;
     const { role, id: userId } = req.user;
 
@@ -80,6 +80,9 @@ export const recordSale = async (req, res) => {
 
     // Parse the date or use the current date if not provided
     const currentDate = date ? new Date(date) : new Date();
+
+    // Calculate the total amount based on quantity and price per unit
+    const totalAmount = quantity * pricePerUnit;
 
     // Create a new sales record
     const newSale = new Sales({

@@ -4,14 +4,14 @@ import Owner from "../models/owner-model.js";
 
 export const signupOwner = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { phoneNumber, password } = req.body;
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create a new owner
     const newOwner = new Owner({
-      username,
+      phoneNumber,
       password: hashedPassword,
     });
 
@@ -25,10 +25,10 @@ export const signupOwner = async (req, res) => {
 
 export const loginOwner = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { phoneNumber, password } = req.body;
 
-    // Find the owner by username
-    const owner = await Owner.findOne({ username });
+    // Find the owner by phoneNumber
+    const owner = await Owner.findOne({ phoneNumber });
     if (!owner) {
       return res.status(404).json({ message: "Owner not found" });
     }

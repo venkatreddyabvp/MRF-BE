@@ -4,14 +4,14 @@ import Worker from "../models/worker-model.js";
 
 export const signupWorker = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { phoneNumber, password } = req.body;
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create a new worker
     const newWorker = new Worker({
-      username,
+      phoneNumber,
       password: hashedPassword,
     });
 
@@ -25,10 +25,10 @@ export const signupWorker = async (req, res) => {
 
 export const loginWorker = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { phoneNumber, password } = req.body;
 
-    // Find the worker by username
-    const worker = await Worker.findOne({ username });
+    // Find the worker by phoneNumber
+    const worker = await Worker.findOne({ phoneNumber });
     if (!worker) {
       return res.status(404).json({ message: "Worker not found" });
     }

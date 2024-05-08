@@ -108,32 +108,34 @@ export const recordSale = async (req, res) => {
       stock = new Stock({ date: currentDate });
     }
 
-    // Check if the stock status is "open-stock" and convert it to "open-stock-day"
+    // Check if the requested quantity is available in existing stock
+    if (stock.status === "existing-stock" && stock.quantity < quantity) {
+      return res.status(400).json({ message: "Insufficient stock quantity" });
+    }
+
     if (stock.status === "open-stock") {
       let existingOpenStockDay = await Stock.findOne({
         date: stock.date.toISOString().split("T")[0],
         status: "open-stock-day",
       });
 
-      // If an openStockDay record already exists for the same date, update it instead of creating a new one
+      // If an openStockDay record already exists for the same date, do not create a new record
       if (existingOpenStockDay) {
-        existingOpenStockDay.quantity += stock.quantity; // Add the current stock quantity to the existing openStockDay record
-        existingOpenStockDay.totalAmount += stock.totalAmount; // Add the total amount to the existing openStockDay record
-        await existingOpenStockDay.save();
-      } else {
-        // Create a new openStockDay record
-        const openStockDay = new Stock({
-          date: stock.date,
-          status: "open-stock-day",
-          quantity: stock.quantity,
-          tyreSize: stock.tyreSize,
-          SSP: stock.SSP,
-          totalAmount: stock.totalAmount,
-          pricePerUnit: stock.pricePerUnit,
-          location: stock.location,
-        });
-        await openStockDay.save();
+        return; // Skip creating a new record and move to the next line of code
       }
+
+      // Create a new openStockDay record
+      const openStockDay = new Stock({
+        date: stock.date,
+        status: "open-stock-day",
+        quantity: stock.quantity,
+        tyreSize: stock.tyreSize,
+        SSP: stock.SSP,
+        totalAmount: stock.totalAmount,
+        pricePerUnit: stock.pricePerUnit,
+        location: stock.location,
+      });
+      await openStockDay.save();
     }
 
     stock.quantity -= quantity; // Assuming quantity is being subtracted from stock

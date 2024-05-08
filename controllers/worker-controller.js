@@ -4,13 +4,14 @@ import Worker from "../models/worker-model.js";
 
 export const signupWorker = async (req, res) => {
   try {
-    const { phoneNumber, password } = req.body;
+    const { workerName, phoneNumber, password } = req.body;
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create a new worker
     const newWorker = new Worker({
+      workerName,
       phoneNumber,
       password: hashedPassword,
     });

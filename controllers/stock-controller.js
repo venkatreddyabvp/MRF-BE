@@ -8,7 +8,7 @@ export const addStock = async (req, res) => {
       quantity,
       tyreSize,
       SSP,
-      invoiceAmount,
+      totalAmount,
       pricePerUnit,
       location,
     } = req.body;
@@ -30,7 +30,7 @@ export const addStock = async (req, res) => {
         quantity,
         tyreSize,
         SSP,
-        invoiceAmount,
+        totalAmount,
         pricePerUnit,
         location,
       });
@@ -38,13 +38,13 @@ export const addStock = async (req, res) => {
       // If an "existing-stock" record exists, update the existing stock
       if (stock.status === "existing-stock") {
         stock.quantity += quantity;
-        stock.invoiceAmount += invoiceAmount;
+        stock.totalAmount += totalAmount;
       } else {
         // If an "open-stock" record exists, update the open stock
         stock.quantity = quantity;
         stock.tyreSize = tyreSize;
         stock.SSP = SSP;
-        stock.invoiceAmount = invoiceAmount;
+        stock.totalAmount = totalAmount;
         stock.pricePerUnit = pricePerUnit;
         stock.location = location;
       }
@@ -62,8 +62,15 @@ export const addStock = async (req, res) => {
 
 export const recordSale = async (req, res) => {
   try {
-    const { date, quantity, amount, customerName, phoneNumber, comments } =
-      req.body;
+    const {
+      date,
+      quantity,
+      totalAmount,
+      customerName,
+      phoneNumber,
+      comment,
+      typeSize,
+    } = req.body;
     const { role } = req.user;
 
     let currentDate = date;
@@ -85,10 +92,11 @@ export const recordSale = async (req, res) => {
     const newSale = new Sales({
       date: currentDate,
       quantity,
-      amount,
+      totalAmount,
       customerName,
       phoneNumber,
-      comments,
+      comment,
+      typeSize,
       user: req.user.id,
     });
 
@@ -102,7 +110,7 @@ export const recordSale = async (req, res) => {
     }
 
     stock.quantity += quantity;
-    stock.invoiceAmount += amount;
+    stock.totalAmount += totalAmount;
 
     await stock.save();
 

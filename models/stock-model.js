@@ -6,7 +6,7 @@ const stockSchema = new mongoose.Schema({
   tyreSize: String,
   quantity: { type: Number, default: 0 },
   SSP: String,
-  invoiceAmount: { type: Number, default: 0 },
+  totalAmount: { type: Number, default: 0 },
   pricePerUnit: { type: Number, default: 0 },
   location: String,
   status: {

@@ -15,7 +15,7 @@ export const addStock = async (req, res) => {
     const { role } = req.user;
 
     // Check if the user has the owner role
-    if (role !== "owner") {
+    if (!["owner", "worker"].includes(role)) {
       return res.status(403).json({ message: "Forbidden" });
     }
 

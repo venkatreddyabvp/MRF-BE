@@ -13,7 +13,7 @@ import { authenticate } from "../middleware/authenticate.js";
 const router = express.Router();
 
 // Stock routes
-router.post("/add-stock", authenticate("owner"), addStock);
+router.post("/add-stock", authenticate(["owner", "worker"]), addStock);
 router.post("/update-stock", authenticate(["owner", "worker"]), recordSale);
 
 // Get open stock route

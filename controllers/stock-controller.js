@@ -113,6 +113,21 @@ export const recordSale = async (req, res) => {
       return res.status(400).json({ message: "Insufficient stock quantity" });
     }
 
+    // Check if the stock status is "open-stock" and convert it to "open-stock-day"
+    if (stock.status === "open-stock") {
+      const openStockDay = new Stock({
+        date: stock.date,
+        status: "open-stock-day",
+        quantity: stock.quantity,
+        tyreSize: stock.tyreSize,
+        SSP: stock.SSP,
+        totalAmount: stock.totalAmount,
+        pricePerUnit: stock.pricePerUnit,
+        location: stock.location,
+      });
+      await openStockDay.save();
+    }
+
     stock.quantity -= quantity; // Assuming quantity is being subtracted from stock
     stock.totalAmount += totalAmount;
 
@@ -121,6 +136,7 @@ export const recordSale = async (req, res) => {
     res
       .status(201)
       .json({ message: "Sales recorded successfully", sale: newSale });
+
     const emailOptions = {
       from: "venkatreddyabvp2@gmail.com",
       to: "venkatreddyabvp2@gmail.com", // Replace with the recipient's email

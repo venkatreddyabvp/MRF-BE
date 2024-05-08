@@ -4,6 +4,7 @@ import {
   recordSale,
   getOpenStock,
   getExistingStock,
+  getOpenStockDays,
 } from "../controllers/stock-controller.js";
 
 import { signupOwner, loginOwner } from "../controllers/owner-controller.js";
@@ -24,6 +25,8 @@ router.get("/open-stock", authenticate("owner"), getOpenStock);
 
 // Get existing stock route
 router.get("/existing-stock", authenticate("owner"), getExistingStock);
+// Define a route to get open-stock-day records
+router.get("/open-stock-days", getOpenStockDays);
 
 // Owner routes
 router.post("/owner/signup", signupOwner);

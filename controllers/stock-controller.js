@@ -190,3 +190,15 @@ export const getExistingStock = async (req, res) => {
     res.status(400).json({ message: "Failed to get existing stock" });
   }
 };
+
+export const getOpenStockDays = async (req, res) => {
+  try {
+    // Find all documents where the status is "open-stock-day"
+    const openStockDays = await Stock.find({ status: "open-stock-day" });
+
+    res.status(200).json({ openStockDays });
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ message: "Failed to get open stock days" });
+  }
+};

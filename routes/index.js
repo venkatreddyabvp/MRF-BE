@@ -9,7 +9,10 @@ import {
 import { signupOwner, loginOwner } from "../controllers/owner-controller.js";
 import { signupWorker, loginWorker } from "../controllers/worker-controller.js";
 import { authenticate } from "../middleware/authenticate.js";
-
+import {
+  createSpecialOrder,
+  getSpecialOrders,
+} from "../controllers/specialOrder-controller.js";
 const router = express.Router();
 
 // Stock routes
@@ -29,5 +32,8 @@ router.post("/owner/login", loginOwner);
 // Worker routes
 router.post("/worker/signup", signupWorker);
 router.post("/worker/login", loginWorker);
+
+router.post("/special-order", createSpecialOrder);
+router.get("/special-orders", getSpecialOrders);
 
 export default router;

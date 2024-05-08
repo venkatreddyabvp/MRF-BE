@@ -4,11 +4,11 @@ import {
   recordSale,
   getOpenStock,
   getExistingStock,
-} from "./controllers/stockController.js";
+} from "../controllers/stock-controller.js";
 
-import { signupOwner, loginOwner } from "./controllers/ownerController.js";
-import { signupWorker, loginWorker } from "./controllers/workerController.js";
-import { authenticate } from "./middleware/authenticate.js";
+import { signupOwner, loginOwner } from "../controllers/owner-controller.js";
+import { signupWorker, loginWorker } from "../controllers/worker-controller.js";
+import { authenticate } from "../middleware/authenticate.js";
 
 const router = express.Router();
 
@@ -21,9 +21,6 @@ router.get("/open-stock", authenticate("owner"), getOpenStock);
 
 // Get existing stock route
 router.get("/existing-stock", authenticate("owner"), getExistingStock);
-
-// Sales routes
-router.post("/update-sales", authenticate("worker"), updateSales);
 
 // Owner routes
 router.post("/owner/signup", signupOwner);

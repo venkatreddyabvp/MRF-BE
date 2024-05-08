@@ -62,68 +62,49 @@ export const addStock = async (req, res) => {
 
 export const recordSale = async (req, res) => {
   try {
-    const {
-      currentDate,
-      customDate,
-      quantity,
-      amount,
-      customerName,
-      phoneNumber,
-    } = req.body;
+    const { date, quantity, amount, customerName, phoneNumber, comments } =
+      req.body;
     const { role } = req.user;
+
+    let currentDate = date;
+    let customDate = false;
+
+    // Check if the date is not obtained using Date.now(), then consider it as a custom date
+    if (new Date(date).getTime() !== Date.now()) {
+      customDate = true;
+    } else {
+      currentDate = Date.now();
+    }
 
     // Check if the user has the owner role or worker role
     if (role !== "owner" && role !== "worker") {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    // Create a new sales record with the current date
-    const newSaleCurrent = new Sales({
+    // Create a new sales record
+    const newSale = new Sales({
       date: currentDate,
       quantity,
       amount,
       customerName,
       phoneNumber,
+      comments,
       user: req.user.id,
     });
 
-    // Save the sales record with the current date
-    await newSaleCurrent.save();
+    // Save the sales record
+    await newSale.save();
 
-    // Update the stock with the sales data for the current date
-    let stockCurrent = await Stock.findOne({ date: currentDate });
-    if (!stockCurrent) {
-      stockCurrent = new Stock({ date: currentDate });
+    // Update the stock with the sales data
+    let stock = await Stock.findOne({ date: currentDate });
+    if (!stock) {
+      stock = new Stock({ date: currentDate });
     }
 
-    stockCurrent.quantity += quantity;
-    stockCurrent.invoiceAmount += amount;
+    stock.quantity += quantity;
+    stock.invoiceAmount += amount;
 
-    await stockCurrent.save();
-
-    // Create a new sales record with the custom date
-    const newSaleCustom = new Sales({
-      date: customDate,
-      quantity,
-      amount,
-      customerName,
-      phoneNumber,
-      user: req.user.id,
-    });
-
-    // Save the sales record with the custom date
-    await newSaleCustom.save();
-
-    // Update the stock with the sales data for the custom date
-    let stockCustom = await Stock.findOne({ date: customDate });
-    if (!stockCustom) {
-      stockCustom = new Stock({ date: customDate });
-    }
-
-    stockCustom.quantity += quantity;
-    stockCustom.invoiceAmount += amount;
-
-    await stockCustom.save();
+    await stock.save();
 
     res.status(201).json({ message: "Sales recorded successfully" });
   } catch (err) {

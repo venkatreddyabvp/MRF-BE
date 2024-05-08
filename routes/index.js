@@ -14,7 +14,7 @@ const router = express.Router();
 
 // Stock routes
 router.post("/add-stock", authenticate("owner"), addStock);
-router.post("/update-stock", authenticate("owner", "worker"), recordSale);
+router.post("/update-stock", authenticate(["owner", "worker"]), recordSale);
 
 // Get open stock route
 router.get("/open-stock", authenticate("owner"), getOpenStock);

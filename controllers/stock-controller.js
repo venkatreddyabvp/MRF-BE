@@ -1,5 +1,6 @@
 import Stock from "../models/stock-model.js";
 import Sales from "../models/sales-model.js";
+import { sendEmail } from "../utils/mailer.js";
 
 export const addStock = async (req, res) => {
   try {
@@ -107,6 +108,11 @@ export const recordSale = async (req, res) => {
       stock = new Stock({ date: currentDate });
     }
 
+    // Check if the requested quantity is available in existing stock
+    if (stock.status === "existing-stock" && stock.quantity < quantity) {
+      return res.status(400).json({ message: "Insufficient stock quantity" });
+    }
+
     stock.quantity -= quantity; // Assuming quantity is being subtracted from stock
     stock.totalAmount += totalAmount;
 
@@ -115,6 +121,17 @@ export const recordSale = async (req, res) => {
     res
       .status(201)
       .json({ message: "Sales recorded successfully", sale: newSale });
+    const emailOptions = {
+      from: "venkatreddyabvp2@gmail.com",
+      to: "venkatreddyabvp2@gmail.com", // Replace with the recipient's email
+      subject: "Stock Update Notification",
+      text: "Stock updated successfully",
+      html: "<p>Stock updated successfully</p>", // You can use HTML content here
+    };
+
+    await sendEmail(emailOptions);
+
+    res.status(201).json({ message: "Stock updated successfully" });
   } catch (err) {
     console.error(err);
     res

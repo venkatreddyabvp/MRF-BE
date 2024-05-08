@@ -132,11 +132,6 @@ export const recordSale = async (req, res) => {
     stock.totalAmount += totalAmount;
 
     await stock.save();
-
-    res
-      .status(201)
-      .json({ message: "Sales recorded successfully", sale: newSale });
-
     const emailOptions = {
       from: "venkatreddyabvp2@gmail.com",
       to: "venkatreddyabvp2@gmail.com", // Replace with the recipient's email
@@ -144,7 +139,6 @@ export const recordSale = async (req, res) => {
       text: "Stock updated successfully",
       html: "<p>Stock updated successfully</p>", // You can use HTML content here
     };
-
     await sendEmail(emailOptions);
 
     res.status(201).json({ message: "Stock updated successfully" });

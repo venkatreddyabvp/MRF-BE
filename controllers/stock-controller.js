@@ -72,8 +72,8 @@ export const recordSale = async (req, res) => {
     } = req.body;
     const { role } = req.user;
 
-    // Check if the user has the owner role
-    if (role !== "owner" || role !== "worker") {
+    // Check if the user has the owner role or worker role
+    if (role !== "owner" && role !== "worker") {
       return res.status(403).json({ message: "Forbidden" });
     }
 

@@ -71,22 +71,15 @@ export const recordSale = async (req, res) => {
       comment,
       tyreSize,
     } = req.body;
-    const { role } = req.user;
+    const { role, id: userId } = req.user;
 
-    let currentDate = date;
-    let customDate = false;
-
-    // Check if the date is not obtained using Date.now(), then consider it as a custom date
-    if (new Date(date).getTime() !== Date.now()) {
-      customDate = true;
-    } else {
-      currentDate = Date.now();
-    }
-
-    // Check if the user has the owner role or worker role
-    if (role !== "owner" && role !== "worker") {
+    // Check if the user has the owner or worker role
+    if (!["owner", "worker"].includes(role)) {
       return res.status(403).json({ message: "Forbidden" });
     }
+
+    // Parse the date or use the current date if not provided
+    const currentDate = date ? new Date(date) : new Date();
 
     // Create a new sales record
     const newSale = new Sales({
@@ -97,27 +90,33 @@ export const recordSale = async (req, res) => {
       phoneNumber,
       comment,
       tyreSize,
-      user: req.user.id,
+      user: userId,
     });
 
     // Save the sales record
     await newSale.save();
 
     // Update the stock with the sales data
-    let stock = await Stock.findOne({ date: currentDate });
+    let stock = await Stock.findOne({
+      date: currentDate.toISOString().split("T")[0],
+    });
     if (!stock) {
       stock = new Stock({ date: currentDate });
     }
 
-    stock.quantity += quantity;
+    stock.quantity -= quantity; // Assuming quantity is being subtracted from stock
     stock.totalAmount += totalAmount;
 
     await stock.save();
 
-    res.status(201).json({ message: "Sales recorded successfully" });
+    res
+      .status(201)
+      .json({ message: "Sales recorded successfully", sale: newSale });
   } catch (err) {
     console.error(err);
-    res.status(400).json({ message: "Failed to record sales" });
+    res
+      .status(400)
+      .json({ message: "Failed to record sales", error: err.message });
   }
 };
 

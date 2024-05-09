@@ -113,9 +113,10 @@ export const recordSale = async (req, res) => {
       return res.status(400).json({ message: "Insufficient stock quantity" });
     }
 
+    // Check if the stock status is "open-stock" and convert it to "open-stock-day"
     if (stock.status === "open-stock") {
       let existingOpenStockDay = await Stock.findOne({
-        date: stock.date.toISOString().split("T")[0],
+        date: { $eq: stock.date }, // Compare dates directly
         status: "open-stock-day",
       });
 

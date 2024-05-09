@@ -156,12 +156,6 @@ export const recordSale = async (req, res) => {
 
     // Update the stock with the sales data
     if (stock.status === "open-stock") {
-      let existingOpenStockDay = await Stock.findOne({
-        date: { $eq: stock.date }, // Compare dates directly
-        status: "open-stock-day",
-        tyreSize: stock.tyreSize,
-      });
-
       // Update the open-stock record to existing-stock if it exists
       const existingOpenStock = await Stock.findOne({
         date: currentDate.toISOString().split("T")[0],
@@ -175,6 +169,12 @@ export const recordSale = async (req, res) => {
       }
 
       // If an openStockDay record already exists for the same date, do not create a new record
+      const existingOpenStockDay = await Stock.findOne({
+        date: stock.date,
+        status: "open-stock-day",
+        tyreSize: stock.tyreSize,
+      });
+
       if (!existingOpenStockDay) {
         const openStockDay = new Stock({
           date: stock.date,

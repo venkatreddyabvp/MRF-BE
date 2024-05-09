@@ -162,6 +162,18 @@ export const recordSale = async (req, res) => {
         tyreSize: stock.tyreSize,
       });
 
+      // Update the open-stock record to existing-stock if it exists
+      const existingOpenStock = await Stock.findOne({
+        date: currentDate.toISOString().split("T")[0],
+        status: "open-stock",
+        tyreSize,
+      });
+
+      if (existingOpenStock) {
+        existingOpenStock.status = "existing-stock";
+        await existingOpenStock.save();
+      }
+
       // If an openStockDay record already exists for the same date, do not create a new record
       if (!existingOpenStockDay) {
         const openStockDay = new Stock({
@@ -178,10 +190,14 @@ export const recordSale = async (req, res) => {
       }
     }
 
-    stock.quantity -= quantity; // Assuming quantity is being subtracted from stock
+    // Subtract quantity from stock and update total amount
+    stock.quantity -= quantity;
     stock.totalAmount += totalAmount;
 
+    // Save the updated stock
     await stock.save();
+
+    // Send email notification
     const emailOptions = {
       from: "venkatreddyabvp2@gmail.com",
       to: "venkatreddyabvp2@gmail.com", // Replace with the recipient's email
@@ -191,6 +207,7 @@ export const recordSale = async (req, res) => {
     };
     await sendEmail(emailOptions);
 
+    // Respond with success message
     res.status(201).json({ message: "Stock updated successfully" });
   } catch (err) {
     console.error(err);
@@ -199,6 +216,7 @@ export const recordSale = async (req, res) => {
       .json({ message: "Failed to record sales", error: err.message });
   }
 };
+
 export const getOpenStock = async (req, res) => {
   try {
     // Find all "open-stock" records

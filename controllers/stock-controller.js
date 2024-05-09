@@ -59,6 +59,46 @@ export const addStock = async (req, res) => {
       .json({ message: "Failed to update stock", error: err.message });
   }
 };
+export const updateOpenStock = async (req, res) => {
+  try {
+    const {
+      date,
+      quantity,
+      tyreSize,
+      SSP,
+      totalAmount,
+      pricePerUnit,
+      location,
+    } = req.body;
+    const { role } = req.user;
+
+    if (!["owner", "worker"].includes(role)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    let stock = await Stock.findOne({ date, tyreSize });
+
+    if (!stock) {
+      return res.status(404).json({ message: "Stock not found" });
+    }
+
+    stock.quantity = quantity;
+    stock.tyreSize = tyreSize;
+    stock.SSP = SSP;
+    stock.totalAmount = totalAmount;
+    stock.pricePerUnit = pricePerUnit;
+    stock.location = location;
+
+    await stock.save();
+
+    res.status(200).json({ message: "Stock updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ message: "Failed to update stock", error: err.message });
+  }
+};
 
 export const recordSale = async (req, res) => {
   try {
@@ -192,5 +232,23 @@ export const getOpenStockDays = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(400).json({ message: "Failed to get open stock days" });
+  }
+};
+
+export const getSalesRecords = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const query = {};
+
+    if (startDate && endDate) {
+      query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    }
+
+    const salesRecords = await Sales.find(query);
+
+    res.status(200).json({ salesRecords });
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ message: "Failed to get sales records" });
   }
 };

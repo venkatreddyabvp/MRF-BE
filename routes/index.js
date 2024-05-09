@@ -5,6 +5,8 @@ import {
   getOpenStock,
   getExistingStock,
   getOpenStockDays,
+  updateOpenStock,
+  getSalesRecords,
 } from "../controllers/stock-controller.js";
 
 import { signupOwner, loginOwner } from "../controllers/owner-controller.js";
@@ -19,6 +21,13 @@ const router = express.Router();
 // Stock routes
 router.post("/add-stock", authenticate(["owner", "worker"]), addStock);
 router.post("/update-stock", authenticate(["owner", "worker"]), recordSale);
+router.post(
+  "/update-open-stock",
+  authenticate(["owner", "worker"]),
+  updateOpenStock,
+);
+//Get sales reports
+router.get("/sales", authenticate(["owner", "worker"]), getSalesRecords);
 
 // Get open stock route
 router.get("/open-stock", getOpenStock);

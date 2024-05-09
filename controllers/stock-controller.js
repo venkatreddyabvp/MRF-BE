@@ -237,15 +237,8 @@ export const getOpenStockDays = async (req, res) => {
 
 export const getSalesRecords = async (req, res) => {
   try {
-    const { role } = req.user;
-
-    // Check if the user has the owner or worker role
-    if (!["owner", "worker"].includes(role)) {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-
-    // Find sales records for the current user
-    const salesRecords = await Sales.find({ user: userId });
+    // Find all sales records
+    const salesRecords = await Sales.find();
 
     res.status(200).json({ salesRecords });
   } catch (err) {

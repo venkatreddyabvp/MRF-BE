@@ -237,18 +237,21 @@ export const getOpenStockDays = async (req, res) => {
 
 export const getSalesRecords = async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
-    const query = {};
+    const { role } = req.user;
 
-    if (startDate && endDate) {
-      query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    // Check if the user has the owner or worker role
+    if (!["owner", "worker"].includes(role)) {
+      return res.status(403).json({ message: "Forbidden" });
     }
 
-    const salesRecords = await Sales.find(query);
+    // Find sales records for the current user
+    const salesRecords = await Sales.find({ user: userId });
 
     res.status(200).json({ salesRecords });
   } catch (err) {
     console.error(err);
-    res.status(400).json({ message: "Failed to get sales records" });
+    res
+      .status(400)
+      .json({ message: "Failed to get sales records", error: err.message });
   }
 };

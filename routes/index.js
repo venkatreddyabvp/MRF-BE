@@ -21,10 +21,14 @@ router.post("/add-stock", authenticate(["owner", "worker"]), addStock);
 router.post("/update-stock", authenticate(["owner", "worker"]), recordSale);
 
 // Get open stock route
-router.get("/open-stock", authenticate("owner"), getOpenStock);
+router.get("/open-stock", getOpenStock);
 
 // Get existing stock route
-router.get("/existing-stock", authenticate("owner"), getExistingStock);
+router.get(
+  "/existing-stock",
+
+  getExistingStock,
+);
 // Define a route to get open-stock-day records
 router.get("/open-stock-days", getOpenStockDays);
 
@@ -43,7 +47,7 @@ router.post(
 );
 router.get(
   "/special-reports",
-  authenticate(["owner", "worker"]),
+
   getSpecialOrders,
 );
 

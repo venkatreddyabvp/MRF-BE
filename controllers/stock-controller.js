@@ -15,48 +15,63 @@ export const addStock = async (req, res) => {
     } = req.body;
     const { role } = req.user;
 
-    // Check if the user has the owner role
     if (!["owner", "worker"].includes(role)) {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    // Check if there is an existing stock record for the given date and tyreSize
-    const existingStock = await Stock.findOne({ date, tyreSize });
+    const session = await startSession();
+    session.startTransaction();
 
-    if (existingStock) {
-      return res.status(400).json({
-        message: "Stock record already exists for this date and tyreSize",
-      });
+    try {
+      const existingStock = await Stock.findOne({ date, tyreSize }).session(
+        session,
+      );
+
+      if (existingStock) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({
+          message: "Stock record already exists for this date and tyreSize",
+        });
+      }
+
+      let stock = await Stock.findOne({ date, status: "open-stock" }).session(
+        session,
+      );
+
+      if (!stock) {
+        stock = new Stock({
+          date,
+          status: "open-stock",
+          quantity: 0,
+          tyreSize: "",
+          SSP: 0,
+          totalAmount: 0,
+          pricePerUnit: 0,
+          location: "",
+        });
+      }
+
+      stock.quantity += quantity;
+      stock.tyreSize = tyreSize;
+      stock.SSP = SSP;
+      stock.totalAmount += totalAmount;
+      stock.pricePerUnit = pricePerUnit;
+      stock.location = location;
+
+      await stock.save({ session });
+      await session.commitTransaction();
+      session.endSession();
+
+      res.status(201).json({ message: "Stock updated successfully" });
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      console.error(error);
+      res
+        .status(500)
+        .json({ message: "Failed to update stock", error: error.message });
     }
-
-    // Find or create an "open-stock" record for the given date
-    let stock = await Stock.findOne({ date, status: "open-stock" });
-
-    if (!stock) {
-      stock = new Stock({
-        date,
-        status: "open-stock",
-        quantity: 0, // Set initial quantity to 0
-        tyreSize: "", // Set initial tyreSize to empty string
-        SSP: 0, // Set initial SSP to 0
-        totalAmount: 0, // Set initial totalAmount to 0
-        pricePerUnit: 0, // Set initial pricePerUnit to 0
-        location: "", // Set initial location to empty string
-      });
-    }
-
-    // Update the stock with the new values
-    stock.quantity += quantity;
-    stock.tyreSize = tyreSize;
-    stock.SSP = SSP;
-    stock.totalAmount += totalAmount;
-    stock.pricePerUnit = pricePerUnit;
-    stock.location = location;
-
-    // Save the updated stock record
-    await stock.save();
-
-    res.status(201).json({ message: "Stock updated successfully" });
   } catch (err) {
     console.error(err);
     res.status(400).json({ message: "Failed to update stock" });
@@ -162,17 +177,10 @@ export const recordSale = async (req, res) => {
       .json({ message: "Failed to record sales", error: err.message });
   }
 };
-
 export const getOpenStock = async (req, res) => {
   try {
-    const { date } = req.body;
-
-    // Find the "open-stock" record for the given date
-    const openStock = await Stock.findOne({ date, status: "open-stock" });
-
-    if (!openStock) {
-      return res.status(404).json({ message: "Open stock not found" });
-    }
+    // Find all "open-stock" records
+    const openStock = await Stock.find({ status: "open-stock" });
 
     res.status(200).json({ openStock });
   } catch (err) {
@@ -183,13 +191,8 @@ export const getOpenStock = async (req, res) => {
 
 export const getExistingStock = async (req, res) => {
   try {
-    const { date } = req.body;
-
-    // Find the "existing-stock" records for dates before or on the given date
-    const existingStock = await Stock.find({
-      date: { $lte: date },
-      status: "existing-stock",
-    });
+    // Find all "existing-stock" records
+    const existingStock = await Stock.find({ status: "existing-stock" });
 
     res.status(200).json({ existingStock });
   } catch (err) {
@@ -200,7 +203,7 @@ export const getExistingStock = async (req, res) => {
 
 export const getOpenStockDays = async (req, res) => {
   try {
-    // Find all documents where the status is "open-stock-day"
+    // Find all "open-stock-day" records
     const openStockDays = await Stock.find({ status: "open-stock-day" });
 
     res.status(200).json({ openStockDays });

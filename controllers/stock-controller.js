@@ -19,14 +19,6 @@ export const addStock = async (req, res) => {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    const existingStock = await Stock.findOne({ date, tyreSize });
-
-    if (existingStock) {
-      return res.status(400).json({
-        message: "Stock record already exists for this date and tyreSize",
-      });
-    }
-
     let stock = await Stock.findOne({ date, tyreSize });
 
     if (!stock) {
@@ -51,6 +43,26 @@ export const addStock = async (req, res) => {
 
     await stock.save();
 
+    // Decrease total amount in sales record based on sale quantity
+    const salesRecords = await Sales.find({ date, tyreSize });
+    for (const record of salesRecords) {
+      record.totalAmount -= quantity * pricePerUnit;
+      await record.save();
+    }
+
+    // Calculate profit and add it to the sales record
+    const profit = quantity * (SSP - pricePerUnit);
+
+    const newSale = new Sales({
+      date,
+      quantity,
+      totalAmount: quantity * pricePerUnit,
+      profit,
+      tyreSize,
+      user: userId,
+    });
+    await newSale.save();
+
     res.status(201).json({ message: "Stock updated successfully" });
   } catch (err) {
     console.error(err);
@@ -59,6 +71,7 @@ export const addStock = async (req, res) => {
       .json({ message: "Failed to update stock", error: err.message });
   }
 };
+
 export const updateOpenStock = async (req, res) => {
   try {
     const {

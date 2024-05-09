@@ -20,36 +20,29 @@ export const addStock = async (req, res) => {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    // Find the stock for the given date
-    let stock = await Stock.findOne({ date });
+    // Find or create an "open-stock" record for the given date
+    let stock = await Stock.findOne({ date, status: "open-stock" });
 
-    // If no stock exists for the given date, create a new "open-stock" record
     if (!stock) {
       stock = new Stock({
         date,
         status: "open-stock",
-        quantity,
-        tyreSize,
-        SSP,
-        totalAmount,
-        pricePerUnit,
-        location,
+        quantity: 0, // Set initial quantity to 0
+        tyreSize: "", // Set initial tyreSize to empty string
+        SSP: 0, // Set initial SSP to 0
+        totalAmount: 0, // Set initial totalAmount to 0
+        pricePerUnit: 0, // Set initial pricePerUnit to 0
+        location: "", // Set initial location to empty string
       });
-    } else {
-      // If an "existing-stock" record exists, update the existing stock
-      if (stock.status === "existing-stock") {
-        stock.quantity += quantity;
-        stock.totalAmount += totalAmount;
-      } else {
-        // If an "open-stock" record exists, update the open stock
-        stock.quantity = quantity;
-        stock.tyreSize = tyreSize;
-        stock.SSP = SSP;
-        stock.totalAmount = totalAmount;
-        stock.pricePerUnit = pricePerUnit;
-        stock.location = location;
-      }
     }
+
+    // Update the stock with the new values
+    stock.quantity += quantity;
+    stock.tyreSize = tyreSize;
+    stock.SSP = SSP;
+    stock.totalAmount += totalAmount;
+    stock.pricePerUnit = pricePerUnit;
+    stock.location = location;
 
     // Save the updated stock record
     await stock.save();
@@ -82,8 +75,23 @@ export const recordSale = async (req, res) => {
     // Parse the date or use the current date if not provided
     const currentDate = date ? new Date(date) : new Date();
 
+    // Check if the item exists in the stock
+    let stock = await Stock.findOne({
+      date: currentDate.toISOString().split("T")[0],
+      tyreSize,
+    });
+
+    if (!stock) {
+      return res.status(404).json({ message: "Item not found in stock" });
+    }
+
     // Calculate the total amount based on quantity and price per unit
     const totalAmount = quantity * pricePerUnit;
+
+    // Check if the requested quantity is available in existing stock
+    if (stock.status === "existing-stock" && stock.quantity < quantity) {
+      return res.status(400).json({ message: "Insufficient stock quantity" });
+    }
 
     // Create a new sales record
     const newSale = new Sales({
@@ -101,19 +109,6 @@ export const recordSale = async (req, res) => {
     await newSale.save();
 
     // Update the stock with the sales data
-    let stock = await Stock.findOne({
-      date: currentDate.toISOString().split("T")[0],
-    });
-    if (!stock) {
-      stock = new Stock({ date: currentDate });
-    }
-
-    // Check if the requested quantity is available in existing stock
-    if (stock.status === "existing-stock" && stock.quantity < quantity) {
-      return res.status(400).json({ message: "Insufficient stock quantity" });
-    }
-
-    // Check if the stock status is "open-stock" and convert it to "open-stock-day"
     if (stock.status === "open-stock") {
       let existingOpenStockDay = await Stock.findOne({
         date: { $eq: stock.date }, // Compare dates directly
@@ -121,22 +116,19 @@ export const recordSale = async (req, res) => {
       });
 
       // If an openStockDay record already exists for the same date, do not create a new record
-      if (existingOpenStockDay) {
-        return; // Skip creating a new record and move to the next line of code
+      if (!existingOpenStockDay) {
+        const openStockDay = new Stock({
+          date: stock.date,
+          status: "open-stock-day",
+          quantity: stock.quantity,
+          tyreSize: stock.tyreSize,
+          SSP: stock.SSP,
+          totalAmount: stock.totalAmount,
+          pricePerUnit: stock.pricePerUnit,
+          location: stock.location,
+        });
+        await openStockDay.save();
       }
-
-      // Create a new openStockDay record
-      const openStockDay = new Stock({
-        date: stock.date,
-        status: "open-stock-day",
-        quantity: stock.quantity,
-        tyreSize: stock.tyreSize,
-        SSP: stock.SSP,
-        totalAmount: stock.totalAmount,
-        pricePerUnit: stock.pricePerUnit,
-        location: stock.location,
-      });
-      await openStockDay.save();
     }
 
     stock.quantity -= quantity; // Assuming quantity is being subtracted from stock

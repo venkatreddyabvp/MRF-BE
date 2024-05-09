@@ -122,6 +122,7 @@ export const recordSale = async (req, res) => {
       let existingOpenStockDay = await Stock.findOne({
         date: { $eq: stock.date }, // Compare dates directly
         status: "open-stock-day",
+        tyreSize: stock.tyreSize,
       });
 
       // If an openStockDay record already exists for the same date, do not create a new record

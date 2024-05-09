@@ -19,29 +19,58 @@ export const addStock = async (req, res) => {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    let stock = await Stock.findOne({ date, tyreSize });
+    // Check if there is existing stock with the same tyreSize in the previous date
+    const previousDate = new Date(date);
+    previousDate.setDate(previousDate.getDate() - 1);
+    const existingStock = await Stock.findOne({
+      date: previousDate.toISOString().split("T")[0],
+      tyreSize,
+    });
 
-    if (!stock) {
-      stock = new Stock({
+    if (existingStock) {
+      // Update existing-stock quantity
+      existingStock.quantity += quantity;
+      await existingStock.save();
+
+      // Create a new record for open-stock for the current date
+      const newStock = new Stock({
         date,
         status: "open-stock",
-        quantity: 0,
-        tyreSize: "",
-        SSP: 0,
-        totalAmount: 0,
-        pricePerUnit: 0,
-        location: "",
+        quantity,
+        tyreSize,
+        SSP,
+        totalAmount,
+        pricePerUnit,
+        location,
       });
+      await newStock.save();
+
+      // Create a new record with the same values but the current date
+      const newExistingStock = new Stock({
+        date: new Date().toISOString().split("T")[0],
+        status: "existing-stock",
+        quantity: existingStock.quantity,
+        tyreSize: existingStock.tyreSize,
+        SSP: existingStock.SSP,
+        totalAmount: existingStock.totalAmount,
+        pricePerUnit: existingStock.pricePerUnit,
+        location: existingStock.location,
+      });
+      await newExistingStock.save();
+    } else {
+      // Create a new record for open-stock-day
+      const newStock = new Stock({
+        date,
+        status: "open-stock-day",
+        quantity,
+        tyreSize,
+        SSP,
+        totalAmount,
+        pricePerUnit,
+        location,
+      });
+      await newStock.save();
     }
-
-    stock.quantity += quantity;
-    stock.tyreSize = tyreSize;
-    stock.SSP = SSP;
-    stock.totalAmount += totalAmount;
-    stock.pricePerUnit = pricePerUnit;
-    stock.location = location;
-
-    await stock.save();
 
     // Decrease total amount in sales record based on sale quantity
     const salesRecords = await Sales.find({ date, tyreSize });
@@ -89,14 +118,19 @@ export const updateOpenStock = async (req, res) => {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    let stock = await Stock.findOne({ date, tyreSize });
+    // Find open-stock record with the same tyreSize and date
+    let stock = await Stock.findOne({ date, tyreSize, status: "open-stock" });
+
+    if (!stock) {
+      // If open-stock not found, try to update existing-stock
+      stock = await Stock.findOne({ date, tyreSize, status: "existing-stock" });
+    }
 
     if (!stock) {
       return res.status(404).json({ message: "Stock not found" });
     }
 
     stock.quantity = quantity;
-    stock.tyreSize = tyreSize;
     stock.SSP = SSP;
     stock.totalAmount = totalAmount;
     stock.pricePerUnit = pricePerUnit;

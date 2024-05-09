@@ -20,6 +20,15 @@ export const addStock = async (req, res) => {
       return res.status(403).json({ message: "Forbidden" });
     }
 
+    // Check if there is an existing stock record for the given date and tyreSize
+    const existingStock = await Stock.findOne({ date, tyreSize });
+
+    if (existingStock) {
+      return res.status(400).json({
+        message: "Stock record already exists for this date and tyreSize",
+      });
+    }
+
     // Find or create an "open-stock" record for the given date
     let stock = await Stock.findOne({ date, status: "open-stock" });
 
@@ -75,7 +84,7 @@ export const recordSale = async (req, res) => {
     // Parse the date or use the current date if not provided
     const currentDate = date ? new Date(date) : new Date();
 
-    // Check if the item exists in the stock
+    // Check if the item exists in the stock for the given tyreSize
     let stock = await Stock.findOne({
       date: currentDate.toISOString().split("T")[0],
       tyreSize,

@@ -19,62 +19,44 @@ export const addStock = async (req, res) => {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    const session = await startSession();
-    session.startTransaction();
+    const existingStock = await Stock.findOne({ date, tyreSize });
 
-    try {
-      const existingStock = await Stock.findOne({ date, tyreSize }).session(
-        session,
-      );
-
-      if (existingStock) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(400).json({
-          message: "Stock record already exists for this date and tyreSize",
-        });
-      }
-
-      let stock = await Stock.findOne({ date, status: "open-stock" }).session(
-        session,
-      );
-
-      if (!stock) {
-        stock = new Stock({
-          date,
-          status: "open-stock",
-          quantity: 0,
-          tyreSize: "",
-          SSP: 0,
-          totalAmount: 0,
-          pricePerUnit: 0,
-          location: "",
-        });
-      }
-
-      stock.quantity += quantity;
-      stock.tyreSize = tyreSize;
-      stock.SSP = SSP;
-      stock.totalAmount += totalAmount;
-      stock.pricePerUnit = pricePerUnit;
-      stock.location = location;
-
-      await stock.save({ session });
-      await session.commitTransaction();
-      session.endSession();
-
-      res.status(201).json({ message: "Stock updated successfully" });
-    } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
-      console.error(error);
-      res
-        .status(500)
-        .json({ message: "Failed to update stock", error: error.message });
+    if (existingStock) {
+      return res.status(400).json({
+        message: "Stock record already exists for this date and tyreSize",
+      });
     }
+
+    let stock = await Stock.findOne({ date, tyreSize });
+
+    if (!stock) {
+      stock = new Stock({
+        date,
+        status: "open-stock",
+        quantity: 0,
+        tyreSize: "",
+        SSP: 0,
+        totalAmount: 0,
+        pricePerUnit: 0,
+        location: "",
+      });
+    }
+
+    stock.quantity += quantity;
+    stock.tyreSize = tyreSize;
+    stock.SSP = SSP;
+    stock.totalAmount += totalAmount;
+    stock.pricePerUnit = pricePerUnit;
+    stock.location = location;
+
+    await stock.save();
+
+    res.status(201).json({ message: "Stock updated successfully" });
   } catch (err) {
     console.error(err);
-    res.status(400).json({ message: "Failed to update stock" });
+    res
+      .status(500)
+      .json({ message: "Failed to update stock", error: err.message });
   }
 };
 

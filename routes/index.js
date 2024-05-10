@@ -27,7 +27,7 @@ router.post(
   updateOpenStock,
 );
 //Get sales reports
-router.get("/sales", authenticate(["owner", "worker"]), getSalesRecords);
+router.get("/sales", getSalesRecords);
 
 // Get open stock route
 router.get("/open-stock", getOpenStock);

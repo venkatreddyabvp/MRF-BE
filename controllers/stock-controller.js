@@ -263,7 +263,7 @@ export const recordSale = async (req, res) => {
       .json({ message: "Failed to record sales", error: err.message });
   }
 };
-
+//get OpenStock_____
 export const getOpenStock = async (req, res) => {
   try {
     // Find all "open-stock" records
